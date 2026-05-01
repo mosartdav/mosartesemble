@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MetaEnsemble v5 — Polymarket Weather</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#07090f;--bg2:#08101e;--bg3:#06080e;--bd:#16243a;--bd2:#1e3450;--tx:#c0d4e8;--tx2:#a0b8d0;--tx3:#243650;--acc:#38d4ff;--grn:#00e68a;--yel:#f4be50;--red:#dc4646;--ora:#f08060}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:13px;min-height:100vh}
+header{background:#090c18;border-bottom:1px solid var(--bd);padding:8px 15px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20}
+.logo{font-size:11px;letter-spacing:.22em;color:var(--acc);font-weight:700}
+.sub{font-size:8px;color:var(--tx3);letter-spacing:.09em;margin-top:2px}
+.hright{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:10px;color:var(--tx3);flex-wrap:wrap}
+.hbtn{padding:3px 10px;border-radius:20px;border:1px solid var(--bd2);background:transparent;cursor:pointer;font-size:10px;font-weight:700;color:var(--acc);transition:all .15s}
+.hbtn:hover{background:#0b1e38}
+.rfbtn{padding:3px 9px;border-radius:5px;border:1px solid var(--bd);background:transparent;cursor:pointer;font-size:10px;color:var(--tx3)}
+.rfbtn:hover{color:var(--acc);border-color:var(--acc)}
+.datetime-display{font-size:10px;color:var(--tx3);font-family:monospace;background:#060c18;padding:2px 8px;border-radius:4px;border:1px solid var(--bd)}
+main{display:flex;height:calc(100vh - 43px);overflow:hidden}
+aside{width:175px;border-right:1px solid var(--bd);background:var(--bg3);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.aside-hd{padding:7px 8px;border-bottom:1px solid var(--bd)}
+#csearch{width:100%;background:#0b1828;border:1px solid var(--bd2);color:var(--tx2);padding:4px 8px;font-size:11px;border-radius:4px;outline:none}
+#csearch::placeholder{color:var(--tx3)}
+.clist{overflow-y:auto;flex:1}
+.ci{padding:5px 8px;cursor:pointer;border-left:2px solid transparent}
+.ci:hover{background:#0b1828}
+.ci.on{background:#0a1c38;border-left-color:var(--acc)}
+.cn{font-size:11px;font-weight:500;color:#98b8d0}.ci.on .cn{color:var(--acc)}
+.cc{font-size:8px;color:var(--tx3);margin-top:1px}
+content{flex:1;overflow-y:auto;padding:11px 14px;display:flex;flex-direction:column;gap:10px}
+
+/* PANELS */
+.panel{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:10px 13px}
+.phd{font-size:9px;color:var(--tx3);letter-spacing:.15em;font-weight:700;margin-bottom:8px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+
+/* REGIME BADGE */
+.regime-bar{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:8px;border:1px solid;margin-bottom:0}
+.regime-icon{font-size:22px;line-height:1}
+.regime-name{font-size:13px;font-weight:700}
+.regime-desc{font-size:10px;opacity:.75;margin-top:2px}
+.regime-badge{font-size:8px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:4px}
+.regime-dry{background:rgba(240,128,96,.08);border-color:rgba(240,128,96,.25);color:var(--ora)}
+.regime-dry .regime-name{color:var(--ora)}
+.regime-dry .regime-badge{background:rgba(240,128,96,.15);color:var(--ora)}
+.regime-humid{background:rgba(93,202,165,.07);border-color:rgba(93,202,165,.22);color:#5dcaa5}
+.regime-humid .regime-name{color:#5dcaa5}
+.regime-humid .regime-badge{background:rgba(93,202,165,.14);color:#5dcaa5}
+.regime-storm{background:rgba(122,176,216,.07);border-color:rgba(122,176,216,.22);color:#7ab0d8}
+.regime-storm .regime-name{color:#7ab0d8}
+.regime-storm .regime-badge{background:rgba(122,176,216,.14);color:#7ab0d8}
+.regime-neutral{background:rgba(56,212,255,.06);border-color:rgba(56,212,255,.18);color:var(--acc)}
+.regime-neutral .regime-name{color:var(--acc)}
+.regime-neutral .regime-badge{background:rgba(56,212,255,.12);color:var(--acc)}
+
+/* HERO */
+.hero{background:linear-gradient(130deg,#0a1526,#07101d);border:1px solid #1c3858;border-radius:10px;padding:13px 16px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start}
+.hero-lbl{font-size:8px;color:var(--acc);letter-spacing:.2em;font-weight:700;margin-bottom:4px}
+.hero-val{font-size:50px;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px}
+.hero-unit{font-size:15px;color:var(--acc);vertical-align:super;font-weight:400}
+.hero-ci{font-size:10px;color:#3a6080;margin-top:4px;line-height:1.6}
+.hero-right{display:flex;flex-direction:column;gap:7px}
+.score-box{background:#060e1c;border:1px solid var(--bd);border-radius:8px;padding:9px 13px;text-align:center;min-width:112px}
+.sc-lbl{font-size:8px;color:var(--tx3);letter-spacing:.1em;margin-bottom:3px}
+.sc-val{font-size:32px;font-weight:800;line-height:1}
+.sc-sub{font-size:8px;color:#3a5a7a;margin-top:3px}
+.stats4{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.st{background:#060e1c;border:1px solid var(--bd);border-radius:5px;padding:6px 8px}
+.st-l{font-size:8px;color:var(--tx3);letter-spacing:.04em;margin-bottom:1px}
+.st-v{font-size:12px;font-weight:700;color:#a0c0dc}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;margin-top:5px}
+.bh{background:rgba(0,230,138,.09);color:var(--grn);border:1px solid rgba(0,230,138,.2)}
+.bm{background:rgba(244,190,80,.08);color:var(--yel);border:1px solid rgba(244,190,80,.18)}
+.bl{background:rgba(220,70,70,.09);color:var(--red);border:1px solid rgba(220,70,70,.18)}
+
+/* SPIKE ALERTS */
+.spike-list{display:flex;flex-direction:column;gap:5px}
+.spike-item{display:flex;align-items:center;gap:8px;background:#060e1c;border:1px solid;border-radius:5px;padding:6px 10px;font-size:11px}
+.spike-hi{border-color:rgba(220,70,70,.3);color:var(--red)}
+.spike-lo{border-color:rgba(56,212,255,.2);color:var(--acc)}
+.spike-arrow{font-size:14px;font-weight:700;flex-shrink:0}
+
+/* CURRENT + METAR */
+.cw-row{display:flex;flex-wrap:wrap;gap:7px}
+.cw-item{flex:1;min-width:75px;background:#060e1c;border:1px solid var(--bd);border-radius:5px;padding:6px 8px}
+.cw-l{font-size:8px;color:var(--tx3);letter-spacing:.06em;margin-bottom:2px}
+.cw-v{font-size:13px;font-weight:700;color:#b8d4ec}
+.metar-raw{font-size:10px;color:#4a8080;background:#050c18;border:1px solid var(--bd);border-radius:4px;padding:6px 9px;font-family:monospace;word-break:break-all;line-height:1.5;margin-bottom:7px}
+.mg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.mi{background:#060e1c;border:1px solid var(--bd);border-radius:5px;padding:5px 7px}
+.mi-l{font-size:8px;color:var(--tx3);margin-bottom:2px}
+.mi-v{font-size:11px;font-weight:700;color:var(--tx2)}
+
+/* 48H CHART */
+.chart48{width:100%;height:120px;position:relative}
+.chart48 svg{width:100%;height:100%}
+.c48-labels{display:flex;justify-content:space-between;padding:0 2px;margin-top:1px}
+.c48-lbl{font-size:7px;color:var(--tx3)}
+
+/* VARIABLE GRID */
+.vargrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.vcard{background:#07101c;border:1px solid var(--bd);border-radius:6px;padding:7px 9px;position:relative;overflow:hidden}
+.vfill{position:absolute;bottom:0;left:0;right:0;border-radius:0 0 6px 6px}
+.vi{position:relative;z-index:1}
+.vn{font-size:8px;color:var(--tx3);letter-spacing:.08em;font-weight:700;margin-bottom:3px}
+.vv{font-size:14px;font-weight:700;line-height:1}
+.vu{font-size:8px;color:#3a6080;margin-top:1px}
+.vbar{height:3px;background:#0d1c2e;border-radius:2px;margin-top:6px;overflow:hidden}
+.vbf{height:100%;border-radius:2px}
+
+/* BUCKET CHART */
+.brow{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.blbl{width:60px;font-size:10px;color:#5a88a8;text-align:right;flex-shrink:0}
+.blbl.top{color:#d8eaf8;font-weight:600}
+.brng{width:68px;font-size:8px;color:var(--tx3);flex-shrink:0}
+.btrack{flex:1;height:18px;background:#050d1a;border-radius:3px;position:relative;overflow:hidden}
+.braw{position:absolute;inset:0;border-radius:3px;transition:width .4s;opacity:.15}
+.bcor{position:absolute;top:2px;left:0;height:14px;border-radius:3px;transition:width .4s}
+.bpct{width:34px;font-size:11px;font-weight:700;text-align:right;color:#a0c0dc;flex-shrink:0}
+.bpct.top{color:#fff}
+.braw-pct{width:28px;font-size:8px;text-align:right;color:var(--tx3);flex-shrink:0}
+
+/* MARKOV */
+.mxtbl{border-collapse:collapse;font-size:9px;font-family:monospace}
+.mxtbl td{width:27px;height:23px;text-align:center;border-radius:2px}
+.mxhd{color:var(--tx3);font-size:7px}
+
+/* MODEL GRID */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.mchip{background:#060c18;border:1px solid var(--bd);border-radius:5px;padding:4px 7px;display:flex;align-items:center;gap:4px}
+.mdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.mname{font-size:10px;color:#90b0c8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.morg{font-size:8px;color:var(--tx3)}
+.msco{font-size:9px;font-weight:700;margin-left:auto;flex-shrink:0}
+.mtag{font-size:7px;padding:1px 4px;border-radius:2px;margin-left:3px}
+
+/* AI */
+.ai-area{background:#050d18;border:1px solid #18304a;border-radius:6px;padding:10px 12px;min-height:50px}
+.ai-text{font-size:11.5px;color:#78a0bc;line-height:1.72}
+.ai-meta{font-size:8px;color:#1a3050;margin-top:7px}
+.ai-btn{padding:3px 11px;border-radius:5px;border:1px solid #1c3e5a;background:transparent;cursor:pointer;font-size:10px;color:var(--acc)}
+.ai-btn:hover{background:#07192e}
+.ai-btn:disabled{opacity:.3;cursor:not-allowed}
+.lsq{width:10px;height:3px;border-radius:2px;display:inline-block;margin-right:3px;vertical-align:middle}
+.empty{color:var(--tx3);font-size:11px;text-align:center;padding:1.2rem 0}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:.2}}
+.pulse{animation:pl 1s infinite}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg3)}
+::-webkit-scrollbar-thumb{background:#1a3248;border-radius:2px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">◈ METAENSEMBLE v5</div>
+    <div class="sub">14 MODELS · 11 VARIABLES · REGIME DETECTION · SPIKE ALERTS · METAR · POLYMARKET STATIONS</div>
+  </div>
+  <div class="hright">
+    <span class="datetime-display" id="dt-display">—</span>
+    <button class="hbtn" id="cfbtn" onclick="toggleCF()">°C → °F</button>
+    <span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;background:#333" id="hdot"></span><span id="hok">0/14</span> models</span>
+    <button class="rfbtn" onclick="go()">↺ Refresh</button>
+  </div>
+</header>
+<main>
+  <aside>
+    <div class="aside-hd"><input id="csearch" placeholder="Search cities…" oninput="filterCities(this.value)"></div>
+    <div class="clist" id="clist"></div>
+  </aside>
+  <content>
+    <!-- City header -->
+    <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#ddeefa" id="city-title">—</div>
+        <div style="font-size:8px;color:var(--tx3);margin-top:1px" id="city-coords"></div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:4px">
+        <button class="rfbtn on" id="bt" onclick="setV('temp')" style="color:var(--acc);border-color:var(--bd2)">Temperature</button>
+        <button class="rfbtn" id="bp" onclick="setV('precip')">Precipitation</button>
+      </div>
+    </div>
+
+    <!-- REGIME DETECTION -->
+    <div>
+      <div style="font-size:9px;color:var(--tx3);letter-spacing:.15em;font-weight:700;margin-bottom:6px">ATMOSPHERIC REGIME DETECTION</div>
+      <div class="regime-bar regime-neutral" id="regime-bar">
+        <div class="regime-icon">🌡</div>
+        <div>
+          <div class="regime-name">Detecting regime…</div>
+          <div class="regime-desc">Awaiting ensemble data</div>
+          <span class="regime-badge">PENDING</span>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:8px;color:var(--tx3)">ACTIVE MARKOV MATRIX</div>
+          <div style="font-size:11px;font-weight:700;margin-top:2px" id="regime-matrix-lbl">Standard</div>
+          <div style="font-size:8px;color:var(--tx3);margin-top:3px" id="regime-stats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPIKE DETECTION -->
+    <div class="panel" id="spike-panel" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="phd" style="margin-bottom:0">⚡ SPIKE DETECTION</div>
+        <span style="font-size:8px;color:var(--tx3)">Models deviating >1.5σ from ensemble</span>
+      </div>
+      <div class="spike-list" id="spike-list"></div>
+    </div>
+
+    <!-- CURRENT + METAR -->
+    <div class="g2">
+      <div class="panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <div class="phd" style="margin-bottom:0">CURRENT CONDITIONS</div>
+          <span style="font-size:8px;color:var(--tx3)" id="cw-time">—</span>
+        </div>
+        <div class="cw-row" id="cw-row"><div class="empty">Fetching…</div></div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <div class="phd" style="margin-bottom:0">METAR · <span id="metar-icao" style="color:var(--acc);font-size:9px"></span></div>
+          <span style="font-size:8px;color:var(--tx3)" id="metar-time">—</span>
+        </div>
+        <div id="metar-raw" class="metar-raw">Fetching…</div>
+        <div class="mg" id="metar-grid"><div class="empty" style="grid-column:1/-1">—</div></div>
+      </div>
+    </div>
+
+    <!-- HERO PREDICTION -->
+    <div class="hero">
+      <div>
+        <div class="hero-lbl">ACCURACY-WEIGHTED ENSEMBLE PREDICTION · DAILY MAX</div>
+        <div><span class="hero-val" id="pred-val">—</span><span class="hero-unit" id="pred-unit"></span></div>
+        <div class="hero-ci" id="pred-ci">awaiting data…</div>
+        <div id="pred-badge"></div>
+        <div style="margin-top:5px;font-size:9px;color:var(--tx3)" id="best-model-lbl"></div>
+      </div>
+      <div class="hero-right">
+        <div class="score-box">
+          <div class="sc-lbl">ACCURACY SCORE</div>
+          <div class="sc-val" id="acc-score" style="color:var(--acc)">—</div>
+          <div class="sc-sub" id="acc-grade">11 variables</div>
+        </div>
+        <div class="stats4">
+          <div class="st"><div class="st-l">MEAN</div><div class="st-v" id="pred-mean">—</div></div>
+          <div class="st"><div class="st-l">SPREAD σ</div><div class="st-v" id="pred-spread">—</div></div>
+          <div class="st"><div class="st-l">AGREEMENT</div><div class="st-v" id="pred-agree">—</div></div>
+          <div class="st"><div class="st-l">MARKOV Δ</div><div class="st-v" id="sm">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 48H FORECAST -->
+    <div class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="phd" style="margin-bottom:0">48-HOUR ENSEMBLE FORECAST</div>
+        <div style="display:flex;gap:10px;font-size:8px;color:var(--tx3)">
+          <span><span class="lsq" style="background:var(--acc);opacity:.25"></span>Spread</span>
+          <span><span class="lsq" style="background:var(--acc)"></span>Best model</span>
+          <span><span class="lsq" style="background:var(--yel)"></span>Ensemble mean</span>
+        </div>
+      </div>
+      <div class="chart48" id="chart48"><div class="empty">Fetching…</div></div>
+      <div class="c48-labels" id="c48-labels"></div>
+    </div>
+
+    <!-- VARIABLE ACCURACY -->
+    <div class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="phd" style="margin-bottom:0">11-VARIABLE ACCURACY ASSESSMENT</div>
+        <span style="font-size:8px;color:var(--tx3)">Weight × Agreement → Composite</span>
+      </div>
+      <div class="vargrid" id="vargrid"><div class="empty" style="grid-column:1/-1">Fetching…</div></div>
+    </div>
+
+    <!-- AI ANALYSIS -->
+    <div class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="phd" style="margin-bottom:0">AI FORECAST ANALYSIS</div>
+        <button class="ai-btn" id="ai-btn" onclick="runAI()">Generate analysis ↗</button>
+      </div>
+      <div class="ai-area" id="ai-box">
+        <div class="ai-text" style="color:var(--tx3)">Load ensemble data, then click Generate analysis for an AI narrative using all 11 variables, regime context, and METAR.</div>
+      </div>
+    </div>
+
+    <!-- BUCKET + MARKOV -->
+    <div class="g2">
+      <div class="panel">
+        <div class="phd">BUCKET PROBABILITY DISTRIBUTION</div>
+        <div id="bchart"><div class="empty">—</div></div>
+        <div style="display:flex;gap:10px;font-size:8px;color:var(--tx3);margin-top:5px">
+          <span><span class="lsq" style="background:#3a5a7a;opacity:.5"></span>Raw</span>
+          <span><span class="lsq" style="background:#1d9e75"></span>Regime-corrected</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="phd" id="mx-title">MARKOV MATRIX — <span id="mx-regime-lbl">STANDARD</span></div>
+        <div style="overflow-x:auto" id="mwrap"></div>
+        <div style="font-size:8px;color:var(--tx3);margin-top:5px">Active matrix chosen by detected regime · Diagonal = persistence</div>
+      </div>
+    </div>
+
+    <!-- MODEL STATUS -->
+    <div class="panel">
+      <div class="phd">MODEL STATUS & ACCURACY SCORES</div>
+      <div class="mgrid" id="mgrid"></div>
+    </div>
+    <div style="height:8px"></div>
+  </content>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// CITIES — Polymarket ICAO stations
+// ═══════════════════════════════════════════════════════════════════════════
+const CITIES=[
+  {n:'New York',c:'USA',icao:'KLGA',sta:'LaGuardia Airport',lat:40.7773,lon:-73.8726},
+  {n:'London',c:'UK',icao:'EGLC',sta:'London City Airport',lat:51.5048,lon:0.0495},
+  {n:'Hong Kong',c:'HK',icao:'VHHH',sta:'HK Intl Airport',lat:22.3080,lon:113.9185},
+  {n:'Seoul',c:'S. Korea',icao:'RKSI',sta:'Incheon Intl Airport',lat:37.4691,lon:126.4505},
+  {n:'Miami',c:'USA',icao:'KMIA',sta:'Miami Intl Airport',lat:25.7959,lon:-80.2870},
+  {n:'Chicago',c:'USA',icao:'KORD',sta:"O'Hare Intl Airport",lat:41.9742,lon:-87.9073},
+  {n:'Dallas',c:'USA',icao:'KDFW',sta:'DFW Intl Airport',lat:32.8998,lon:-97.0403},
+  {n:'Atlanta',c:'USA',icao:'KATL',sta:'Hartsfield-Jackson Airport',lat:33.6407,lon:-84.4277},
+  {n:'Seattle',c:'USA',icao:'KSEA',sta:'Seattle-Tacoma Intl Airport',lat:47.4502,lon:-122.3088},
+  {n:'Toronto',c:'Canada',icao:'CYYZ',sta:'Pearson Intl Airport',lat:43.6778,lon:-79.6306},
+  {n:'Paris',c:'France',icao:'LFPG',sta:'Charles de Gaulle Airport',lat:49.0128,lon:2.5500},
+  {n:'Wellington',c:'N. Zealand',icao:'NZWN',sta:'Wellington Airport',lat:-41.3272,lon:174.8052},
+  {n:'Ankara',c:'Turkey',icao:'LTAC',sta:'Esenboğa Intl Airport',lat:40.1281,lon:32.9951},
+  {n:'São Paulo',c:'Brazil',icao:'SBGR',sta:'Guarulhos Intl Airport',lat:-23.4356,lon:-46.4731},
+  {n:'Buenos Aires',c:'Argentina',icao:'SAEZ',sta:'Ministro Pistarini Airport',lat:-34.8222,lon:-58.5358},
+  {n:'Tokyo',c:'Japan',icao:'RJTT',sta:'Haneda Airport',lat:35.5493,lon:139.7798},
+  {n:'Singapore',c:'Singapore',icao:'WSSS',sta:'Changi Airport',lat:1.3502,lon:103.9940},
+  {n:'Madrid',c:'Spain',icao:'LEMD',sta:'Adolfo Suárez-Barajas Airport',lat:40.4936,lon:-3.5668},
+  {n:'Beijing',c:'China',icao:'ZBAA',sta:'Capital Intl Airport',lat:40.0801,lon:116.5845},
+  {n:'Shanghai',c:'China',icao:'ZSSS',sta:'Hongqiao Intl Airport',lat:31.1979,lon:121.3363},
+  {n:'Shenzhen',c:'China',icao:'ZGSZ',sta:"Bao'an Intl Airport",lat:22.6390,lon:113.8109},
+  {n:'Taipei',c:'Taiwan',icao:'RCTP',sta:'Taoyuan Intl Airport',lat:25.0777,lon:121.2328},
+  {n:'Milan',c:'Italy',icao:'LIMC',sta:'Malpensa Intl Airport',lat:45.6306,lon:8.7281},
+  {n:'Munich',c:'Germany',icao:'EDDM',sta:'Munich Airport',lat:48.3537,lon:11.7751},
+  {n:'Istanbul',c:'Turkey',icao:'LTFM',sta:'Istanbul Airport',lat:41.2753,lon:28.7519},
+  {n:'Los Angeles',c:'USA',icao:'KLAX',sta:'Los Angeles Intl Airport',lat:33.9425,lon:-118.4081},
+  {n:'San Francisco',c:'USA',icao:'KSFO',sta:'San Francisco Intl Airport',lat:37.6213,lon:-122.3790},
+  {n:'Denver',c:'USA',icao:'KDEN',sta:'Denver Intl Airport',lat:39.8561,lon:-104.6737},
+  {n:'Houston',c:'USA',icao:'KIAH',sta:'Bush Intercontinental Airport',lat:29.9902,lon:-95.3368},
+  {n:'Austin',c:'USA',icao:'KAUS',sta:'Austin-Bergstrom Intl Airport',lat:30.1975,lon:-97.6664},
+  {n:'Tel Aviv',c:'Israel',icao:'LLBG',sta:'Ben Gurion Intl Airport',lat:32.0114,lon:34.8867},
+  {n:'Warsaw',c:'Poland',icao:'EPWA',sta:'Warsaw Chopin Airport',lat:52.1657,lon:20.9671},
+  {n:'Chengdu',c:'China',icao:'ZUUU',sta:'Shuangliu Intl Airport',lat:30.5785,lon:103.9471},
+  {n:'Chongqing',c:'China',icao:'ZUCK',sta:'Jiangbei Intl Airport',lat:29.7192,lon:106.6412},
+  {n:'Wuhan',c:'China',icao:'ZHHH',sta:'Tianhe Intl Airport',lat:30.7838,lon:114.2081},
+  {n:'Lucknow',c:'India',icao:'VILK',sta:'Chaudhary Charan Singh Airport',lat:26.7606,lon:80.8893}
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODELS — corrected IDs with variable profiles
+// ECMWF IFS → ecmwf_ifs025 (not ifs04 which is deprecated)
+// ECMWF AIFS → ecmwf_aifs025 (limited vars: temp,precip,wind,pressure only)
+// ACCESS Global → access_global (not bom_access_global)
+// ═══════════════════════════════════════════════════════════════════════════
+const MODELS=[
+  {id:'ecmwf_ifs025',            name:'ECMWF IFS 0.25°',  org:'ECMWF', profile:'full'},
+  {id:'ecmwf_aifs025',           name:'ECMWF AIFS 0.25°', org:'ECMWF', profile:'aifs'},
+  {id:'gfs_seamless',            name:'GFS Seamless',      org:'NOAA',  profile:'full'},
+  {id:'gfs025',                  name:'GFS 0.25°',         org:'NOAA',  profile:'full'},
+  {id:'icon_seamless',           name:'ICON Seamless',     org:'DWD',   profile:'full'},
+  {id:'icon_global',             name:'ICON Global',       org:'DWD',   profile:'full'},
+  {id:'icon_eu',                 name:'ICON EU',           org:'DWD',   profile:'full'},
+  {id:'gem_seamless',            name:'GEM Seamless',      org:'ECCC',  profile:'full'},
+  {id:'meteofrance_seamless',    name:'Météo-France',      org:'MF',    profile:'full'},
+  {id:'jma_seamless',            name:'JMA Seamless',      org:'JMA',   profile:'full'},
+  {id:'metno_seamless',          name:'MET Norway',        org:'METNO', profile:'full'},
+  {id:'access_global',           name:'ACCESS-G',          org:'BOM',   profile:'full'},
+  {id:'ukmo_seamless',           name:'UKMO Seamless',     org:'UKMO',  profile:'full'},
+  {id:'meteofrance_arpege_world',name:'ARPEGE World',      org:'MF',    profile:'full'}
+];
+
+// Variable sets per model profile
+const VARS_FULL='temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,precipitation,pressure_msl,cloud_cover,shortwave_radiation,uv_index,soil_moisture_0_to_1cm';
+const VARS_AIFS='temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,pressure_msl,weather_code';
+const VARS_CURR='temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,cloud_cover,pressure_msl,precipitation,weather_code,apparent_temperature';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VARIABLE DEFINITIONS
+// ═══════════════════════════════════════════════════════════════════════════
+const VDEFS=[
+  {key:'temperature_2m',        lbl:'TEMPERATURE',  unit:'°C',  w:.18,norm:2,   col:'#f08060',icon:'🌡',mx:false},
+  {key:'pressure_msl',          lbl:'PRESSURE',     unit:'hPa', w:.16,norm:2.5, col:'#93c4f4',icon:'⬇',mx:false},
+  {key:'dew_point_2m',          lbl:'DEW POINT',    unit:'°C',  w:.13,norm:2,   col:'#5dcaa5',icon:'💧',mx:false},
+  {key:'relative_humidity_2m',  lbl:'HUMIDITY',     unit:'%',   w:.12,norm:5,   col:'#7ab0d8',icon:'~',mx:false},
+  {key:'cloud_cover',           lbl:'CLOUD COVER',  unit:'%',   w:.11,norm:15,  col:'#a0a8b8',icon:'☁',mx:false},
+  {key:'shortwave_radiation',   lbl:'SOLAR RAD.',   unit:'W/m²',w:.10,norm:30,  col:'#f5c060',icon:'☀',mx:true},
+  {key:'wind_speed_10m',        lbl:'WIND SPEED',   unit:'km/h',w:.08,norm:3,   col:'#b0e8c4',icon:'💨',mx:false},
+  {key:'wind_direction_10m',    lbl:'WIND DIR.',    unit:'°',   w:.05,norm:20,  col:'#d4b4e8',icon:'→',mx:false,circ:true},
+  {key:'uv_index',              lbl:'UV INDEX',     unit:'',    w:.04,norm:1.5, col:'#f8a0d0',icon:'UV',mx:true},
+  {key:'soil_moisture_0_to_1cm',lbl:'SOIL MOIST.', unit:'m³',  w:.02,norm:.05, col:'#c8a870',icon:'🌱',mx:false},
+  {key:'_airmass',              lbl:'AIR MASS IDX', unit:'',    w:.01,norm:.05, col:'#90b8d8',icon:'∿',derived:true}
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUCKETS
+// ═══════════════════════════════════════════════════════════════════════════
+const TBKT=[
+  {l:'Freezing',r:'< 0°C',    mn:-1e9,mx:0,   mid:-5, f:'#5b9fe8'},
+  {l:'Cold',    r:'0–10°C',   mn:0,   mx:10,  mid:5,  f:'#93c4f4'},
+  {l:'Cool',    r:'10–18°C',  mn:10,  mx:18,  mid:14, f:'#5dcaa5'},
+  {l:'Mild',    r:'18–24°C',  mn:18,  mx:24,  mid:21, f:'#1d9e75'},
+  {l:'Warm',    r:'24–30°C',  mn:24,  mx:30,  mid:27, f:'#f5c060'},
+  {l:'Hot',     r:'30–38°C',  mn:30,  mx:38,  mid:34, f:'#f08060'},
+  {l:'Extreme', r:'> 38°C',   mn:38,  mx:1e9, mid:42, f:'#e04040'}
+];
+const PBKT=[
+  {l:'Dry',     r:'< 0.1mm/h', mn:-1e9,mx:.1,  mid:0,    f:'#607080'},
+  {l:'Drizzle', r:'0.1–1mm/h', mn:.1,  mx:1,   mid:.5,   f:'#7ab0d8'},
+  {l:'Light',   r:'1–2.5mm/h', mn:1,   mx:2.5, mid:1.75, f:'#3080d0'},
+  {l:'Moderate',r:'2.5–7.5mm/h',mn:2.5,mx:7.5, mid:5,    f:'#1858a8'},
+  {l:'Heavy',   r:'> 7.5mm/h', mn:7.5, mx:1e9, mid:12,   f:'#0c3878'}
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REGIME-SPECIFIC MARKOV MATRICES
+// Each row = forecast bucket, each col = actual outcome bucket (7 temp buckets)
+// ═══════════════════════════════════════════════════════════════════════════
+const MARKOV={
+  // Standard — baseline historical calibration
+  standard:[
+    [.76,.18,.04,.01,.01,0,0],
+    [.10,.71,.14,.04,.01,0,0],
+    [.02,.12,.69,.13,.03,.01,0],
+    [0,.03,.13,.69,.12,.02,.01],
+    [0,.01,.04,.16,.64,.13,.02],
+    [0,0,.01,.04,.14,.67,.14],
+    [0,0,0,.01,.04,.17,.78]
+  ],
+  // DRY HEAT — models underestimate peak, hot buckets persist longer
+  // Biased toward higher actual than forecast in warm/hot range
+  dry:[
+    [.80,.15,.03,.01,.01,0,0],
+    [.08,.68,.16,.06,.02,0,0],
+    [.01,.09,.65,.16,.07,.02,0],
+    [0,.02,.10,.62,.18,.06,.02],
+    [0,0,.03,.12,.58,.20,.07],
+    [0,0,.01,.03,.10,.62,.24],
+    [0,0,0,0,.03,.13,.84]
+  ],
+  // HUMID SUPPRESSION — moisture cap suppresses extreme highs, mild/warm persist
+  // Actual temps tend to verify lower than forecast due to evaporative cooling
+  humid:[
+    [.82,.14,.03,.01,0,0,0],
+    [.12,.74,.11,.03,0,0,0],
+    [.03,.14,.72,.10,.01,0,0],
+    [.01,.04,.15,.72,.07,.01,0],
+    [0,.01,.05,.18,.68,.07,.01],
+    [0,0,.02,.06,.18,.66,.08],
+    [0,0,0,.02,.06,.20,.72]
+  ],
+  // STORM COOLING — convective events pull temps down sharply after peak
+  // High probability of bucket dropping 1-2 levels post-storm
+  storm:[
+    [.78,.17,.04,.01,0,0,0],
+    [.14,.68,.13,.04,.01,0,0],
+    [.04,.16,.64,.12,.03,.01,0],
+    [.01,.05,.16,.63,.12,.02,.01],
+    [0,.02,.06,.18,.61,.11,.02],
+    [0,.01,.02,.07,.18,.61,.11],
+    [0,0,.01,.03,.08,.20,.68]
+  ]
+};
+
+const MARKOV_P={
+  standard:[[.85,.12,.02,.01,0],[.20,.62,.13,.04,.01],[.08,.20,.57,.13,.02],[.03,.08,.18,.58,.13],[.01,.03,.09,.21,.66]],
+  dry:     [[.80,.15,.03,.02,0],[.18,.60,.15,.05,.02],[.06,.18,.58,.14,.04],[.02,.06,.18,.60,.14],[.01,.02,.07,.22,.68]],
+  humid:   [[.88,.09,.02,.01,0],[.22,.64,.10,.03,.01],[.09,.22,.56,.10,.03],[.04,.09,.19,.58,.10],[.01,.04,.10,.23,.62]],
+  storm:   [[.75,.18,.05,.02,0],[.16,.58,.17,.06,.03],[.06,.16,.55,.16,.07],[.02,.06,.16,.56,.20],[.01,.02,.07,.20,.70]]
+};
+
+const WX_CODES={0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm',99:'Hail storm'};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let S={ci:0,v:'temp',md:{},rid:0,last:null,useFah:false,metar:null,regime:'neutral',modelScores:{}};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MATH UTILS
+// ═══════════════════════════════════════════════════════════════════════════
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+const std=(a,m)=>a.length<2?0:Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/a.length);
+const bki=(v,B)=>{for(let i=0;i<B.length;i++) if(v>=B[i].mn&&v<B[i].mx) return i;return B.length-1;};
+function rawP(vals,B){const c=new Array(B.length).fill(0);let n=0;for(const v of vals) if(v!=null&&!isNaN(v)){c[bki(v,B)]++;n++;}return n?c.map(x=>x/n):c.map(()=>0);}
+function applyMKV(rp,MX){const cp=new Array(rp.length).fill(0);for(let j=0;j<rp.length;j++) for(let i=0;i<rp.length;i++) cp[j]+=(MX[i]?.[j]??0)*rp[i];const s=cp.reduce((a,b)=>a+b,0);return s?cp.map(v=>v/s):cp;}
+const ev=(B,p)=>B.reduce((s,b,i)=>s+b.mid*p[i],0);
+const toF=c=>c*9/5+32;
+const fmtT=(c,f)=>(f?toF(c):c).toFixed(1);
+const unitT=f=>f?'°F':'°C';
+function circMean(a){const s=mean(a.map(x=>Math.sin(x*Math.PI/180))),c=mean(a.map(x=>Math.cos(x*Math.PI/180)));return(Math.atan2(s,c)*180/Math.PI+360)%360;}
+function circStd(a,m){const d=a.map(x=>{let v=Math.abs(x-m);return Math.min(v,360-v);});return std(d,mean(d));}
+function dslice(d,key,h0,len){if(!d?.hourly?.[key])return[];return d.hourly[key].slice(h0,h0+len).filter(v=>v!=null&&!isNaN(v));}
+function dmx(d,key,h0,len){const v=dslice(d,key,h0,len);return v.length?Math.max(...v):null;}
+function dmn2(d,key,h0,len){const v=dslice(d,key,h0,len);return v.length?mean(v):null;}
+function degToCard(d){return['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16];}
+function airMass(P,T){return P&&T?(1013.25/P)*(1+0.01*(T-15)):null;}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DATETIME CLOCK
+// ═══════════════════════════════════════════════════════════════════════════
+function tickClock(){
+  const now=new Date();
+  const d=now.toLocaleDateString('en',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+  const t=now.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dt-display').textContent=`${d}  ${t}`;
+}
+setInterval(tickClock,1000);
+tickClock();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REGIME DETECTION
+// ═══════════════════════════════════════════════════════════════════════════
+function detectRegime(){
+  const okM=MODELS.filter(m=>S.md[m.id]?.ok);
+  if(!okM.length) return 'neutral';
+
+  // Compute ensemble means for key vars (first 24h)
+  const getEns=(key,mx)=>{
+    const vals=okM.map(m=>mx?dmx(S.md[m.id].d,key,0,24):dmn2(S.md[m.id].d,key,0,24)).filter(v=>v!=null);
+    return vals.length?mean(vals):null;
+  };
+  const T=getEns('temperature_2m',true);
+  const RH=getEns('relative_humidity_2m',false);
+  const CC=getEns('cloud_cover',false);
+  const PR=getEns('precipitation',true);
+  const WS=getEns('wind_speed_10m',false);
+  const DP=getEns('dew_point_2m',false);
+  const PS=getEns('pressure_msl',false);
+
+  // Dew point spread (T - DP) = proxy for dryness
+  const dpSpread=(T!=null&&DP!=null)?T-DP:null;
+
+  // Regime scoring
+  let scores={dry:0,humid:0,storm:0};
+
+  // DRY HEAT signals
+  if(T!=null&&T>28) scores.dry+=3;
+  else if(T!=null&&T>24) scores.dry+=1;
+  if(RH!=null&&RH<40) scores.dry+=3;
+  else if(RH!=null&&RH<55) scores.dry+=1;
+  if(CC!=null&&CC<30) scores.dry+=2;
+  if(dpSpread!=null&&dpSpread>12) scores.dry+=2;
+  if(PR!=null&&PR<0.1) scores.dry+=1;
+
+  // HUMID SUPPRESSION signals
+  if(RH!=null&&RH>70) scores.humid+=3;
+  else if(RH!=null&&RH>60) scores.humid+=1;
+  if(dpSpread!=null&&dpSpread<5) scores.humid+=3;
+  else if(dpSpread!=null&&dpSpread<8) scores.humid+=1;
+  if(CC!=null&&CC>55) scores.humid+=2;
+  if(PR!=null&&PR>0.5&&PR<5) scores.humid+=1;
+  if(T!=null&&T>20&&T<32) scores.humid+=1;
+
+  // STORM COOLING signals
+  if(PR!=null&&PR>2) scores.storm+=4;
+  else if(PR!=null&&PR>0.5) scores.storm+=2;
+  if(WS!=null&&WS>25) scores.storm+=2;
+  if(CC!=null&&CC>75) scores.storm+=2;
+  if(PS!=null&&PS<1005) scores.storm+=2;
+  if(T!=null&&T>20&&RH!=null&&RH>65&&CC!=null&&CC>60) scores.storm+=2;
+
+  const max=Math.max(scores.dry,scores.humid,scores.storm);
+  if(max<3) return{regime:'neutral',scores,T,RH,CC,PR,WS,dpSpread,PS};
+  const regime=max===scores.dry?'dry':max===scores.humid?'humid':'storm';
+  return{regime,scores,T,RH,CC,PR,WS,dpSpread,PS};
+}
+
+function renderRegime(){
+  const result=detectRegime();
+  const regime=typeof result==='object'?result.regime:result;
+  S.regime=regime;
+  const cfg={
+    dry:{cls:'regime-dry',icon:'🔥',name:'Dry Heat Regime',desc:'High temp · Low humidity · Clear skies · Models tend to underestimate peak',badge:'DRY HEAT ACTIVE',matrix:'DRY HEAT MARKOV'},
+    humid:{cls:'regime-humid',icon:'💦',name:'Humid Suppression Regime',desc:'High RH · Low dew spread · Models overestimate max due to moisture cap',badge:'HUMID SUPPRESSION ACTIVE',matrix:'HUMID MARKOV'},
+    storm:{cls:'regime-storm',icon:'⛈',name:'Storm Cooling Regime',desc:'High precip · High winds · Post-storm temp drop likely to bust warm forecasts',badge:'STORM COOLING ACTIVE',matrix:'STORM MARKOV'},
+    neutral:{cls:'regime-neutral',icon:'🌡',name:'Neutral Regime',desc:'Mixed or insufficient signals — standard Markov correction applied',badge:'STANDARD MARKOV',matrix:'STANDARD MARKOV'}
+  };
+  const c=cfg[regime];
+  const bar=document.getElementById('regime-bar');
+  bar.className='regime-bar '+c.cls;
+  bar.querySelector('.regime-icon').textContent=c.icon;
+  bar.querySelector('.regime-name').textContent=c.name;
+  bar.querySelector('.regime-desc').textContent=c.desc;
+  bar.querySelector('.regime-badge').textContent=c.badge;
+  document.getElementById('regime-matrix-lbl').textContent=c.matrix;
+  document.getElementById('mx-regime-lbl').textContent=c.matrix;
+
+  if(result.scores){
+    const s=result.scores;
+    document.getElementById('regime-stats').textContent=`Dry:${s.dry} Humid:${s.humid} Storm:${s.storm}`;
+  }
+}
+
+function getActiveMarkov(isT){
+  const mk=isT?MARKOV:MARKOV_P;
+  return mk[S.regime]||mk.standard;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SPIKE DETECTION
+// ═══════════════════════════════════════════════════════════════════════════
+function detectSpikes(isT){
+  const key=isT?'temperature_2m':'precipitation';
+  const mxData=MODELS.map(m=>{
+    const e=S.md[m.id];
+    if(!e?.ok) return null;
+    const v=dmx(e.d,key,0,24);
+    return v!=null?{id:m.id,name:m.name,v}:null;
+  }).filter(Boolean);
+  if(mxData.length<3) return [];
+  const vals=mxData.map(x=>x.v);
+  const eMean=mean(vals),eStd=std(vals,eMean)||1;
+  const spikes=[];
+  mxData.forEach(x=>{
+    const dev=(x.v-eMean)/eStd;
+    if(Math.abs(dev)>=1.5){
+      spikes.push({...x,dev,dir:dev>0?'HIGH':'LOW'});
+    }
+  });
+  return spikes;
+}
+
+function renderSpikes(isT){
+  const spikes=detectSpikes(isT);
+  const panel=document.getElementById('spike-panel');
+  if(!spikes.length){panel.style.display='none';return;}
+  panel.style.display='block';
+  const u=isT?unitT(S.useFah):' mm/h';
+  document.getElementById('spike-list').innerHTML=spikes.map(sp=>{
+    const cls=sp.dir==='HIGH'?'spike-hi':'spike-lo';
+    const arrow=sp.dir==='HIGH'?'↑':'↓';
+    const dispV=isT?fmtT(sp.v,S.useFah)+u:sp.v.toFixed(2)+u;
+    return`<div class="spike-item ${cls}"><span class="spike-arrow">${arrow}</span><span><strong>${sp.name}</strong> predicts <strong>${dispV}</strong> — <strong>${Math.abs(sp.dev).toFixed(1)}σ ${sp.dir}</strong> vs ensemble mean</span></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════════════════════════════════════════
+async function fetchModel(city,m){
+  const vars=m.profile==='aifs'?VARS_AIFS:VARS_FULL;
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}`
+    +`&current=${VARS_CURR}&hourly=${vars}&forecast_days=3&models=${m.id}&timezone=auto&wind_speed_unit=kmh`;
+  const r=await fetch(url,{signal:AbortSignal.timeout(20000)});
+  if(!r.ok) throw new Error(`${m.id}: HTTP ${r.status}`);
+  const d=await r.json();
+  d._profile=m.profile;
+  return d;
+}
+
+async function fetchMETAR(icao){
+  const url=`https://aviationweather.gov/api/data/metar?ids=${icao}&format=json&hours=3&taf=false`;
+  const r=await fetch(url,{signal:AbortSignal.timeout(12000)});
+  if(!r.ok) throw new Error(`METAR HTTP ${r.status}`);
+  return r.json();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GO — main fetch orchestrator
+// ═══════════════════════════════════════════════════════════════════════════
+function go(){
+  const rid=++S.rid; S.md={}; S.last=null; S.modelScores={};
+  document.getElementById('hts')?.(null);
+  ['pred-val','pred-mean','pred-spread','pred-agree','sm','acc-score'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+  document.getElementById('pred-ci').textContent='awaiting data…';
+  document.getElementById('pred-badge').innerHTML='';
+  document.getElementById('best-model-lbl').textContent='';
+  document.getElementById('acc-grade').textContent='11 variables';
+  document.getElementById('spike-panel').style.display='none';
+  document.getElementById('vargrid').innerHTML=`<div class="empty" style="grid-column:1/-1">Fetching…</div>`;
+  document.getElementById('chart48').innerHTML=`<div class="empty">Fetching…</div>`;
+  document.getElementById('cw-row').innerHTML=`<div class="empty">Fetching…</div>`;
+  document.getElementById('metar-raw').textContent='Fetching…';
+  document.getElementById('metar-grid').innerHTML=`<div class="empty" style="grid-column:1/-1">—</div>`;
+  rGrid();
+
+  const city=CITIES[S.ci];
+  document.getElementById('metar-icao').textContent=city.icao;
+
+  // METAR
+  fetchMETAR(city.icao)
+    .then(data=>{if(S.rid!==rid)return;S.metar=data;rMETAR();})
+    .catch(()=>{if(S.rid!==rid)return;document.getElementById('metar-raw').textContent='METAR unavailable for this station';});
+
+  // ALL MODELS in parallel
+  MODELS.forEach(m=>{
+    fetchModel(city,m)
+      .then(d=>{if(S.rid!==rid)return;S.md[m.id]={d,ok:true,profile:m.profile};})
+      .catch(e=>{if(S.rid!==rid)return;S.md[m.id]={d:null,ok:false,err:e.message};})
+      .finally(()=>{
+        if(S.rid!==rid)return;
+        rGrid();rAll();
+        const done=Object.keys(S.md).length;
+        if(done===MODELS.length){
+          const ts=new Date().toLocaleTimeString();
+          const hdot=document.getElementById('hdot');
+          const hok=document.getElementById('hok');
+          const ok=MODELS.filter(m=>S.md[m.id]?.ok).length;
+          if(hdot)hdot.style.background=ok>0?'#00e68a':'#555';
+          if(hok)hok.textContent=ok+'/14';
+        }
+      });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCORING
+// ═══════════════════════════════════════════════════════════════════════════
+function getVarStats(vdef){
+  const vals=[];
+  MODELS.forEach(m=>{
+    const e=S.md[m.id];
+    if(!e?.ok) return;
+    if(vdef.derived){
+      const P=dmn2(e.d,'pressure_msl',0,48),T=dmn2(e.d,'temperature_2m',0,48);
+      const am=airMass(P,T);if(am!=null)vals.push(am);
+    } else {
+      const fn=vdef.mx?dmx:dmn2;
+      const v=fn(e.d,vdef.key,0,48);
+      if(v!=null)vals.push(v);
+    }
+  });
+  if(vals.length<2) return null;
+  const m=vdef.circ?circMean(vals):mean(vals);
+  const s=vdef.circ?circStd(vals,m):std(vals,m);
+  const score=Math.max(0,1-Math.min(s/vdef.norm,1));
+  return{m,s,score,n:vals.length};
+}
+
+function computeComposite(){
+  let tw=0,ws=0;
+  VDEFS.forEach(v=>{const st=getVarStats(v);if(!st)return;ws+=st.score*v.w;tw+=v.w;});
+  return tw>0?ws/tw*100:null;
+}
+
+function computeModelScore(mid){
+  const e=S.md[mid];if(!e?.ok)return 0;
+  let hit=0,tot=0;
+  VDEFS.filter(v=>!v.derived).forEach(v=>{
+    const fn=v.mx?dmx:dmn2;
+    const val=fn(e.d,v.key,0,48);
+    tot++;if(val!=null)hit++;
+  });
+  const allT=MODELS.map(m=>{const x=S.md[m.id];return x?.ok?dmx(x.d,'temperature_2m',0,24):null;}).filter(v=>v!=null);
+  const myT=dmx(e.d,'temperature_2m',0,24);
+  let cl=1;
+  if(allT.length>1&&myT!=null){const em=mean(allT),es=std(allT,em)||1;cl=Math.max(0,1-Math.abs(myT-em)/es/2);}
+  return(hit/Math.max(tot,1))*.5+cl*.5;
+}
+
+function getBestModelId(){
+  let best=null,bs=-1;
+  MODELS.forEach(m=>{const s=S.modelScores[m.id]||0;if(s>bs){bs=s;best=m.id;}});
+  return best;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════════════════════════
+function rAll(){
+  const isT=S.v==='temp',B=isT?TBKT:PBKT;
+  const f=S.useFah;
+  const u=isT?unitT(f):' mm/h';
+  const act=MODELS.filter(m=>S.md[m.id]?.ok).length;
+  document.getElementById('hok').textContent=act+'/14';
+  document.getElementById('hdot').style.background=act>0?'#00e68a':'#555';
+
+  // Update model scores
+  MODELS.forEach(m=>{if(S.md[m.id])S.modelScores[m.id]=computeModelScore(m.id);});
+
+  // Regime detection → picks active Markov
+  renderRegime();
+  const MX=getActiveMarkov(isT);
+
+  // Bucket distribution (48h)
+  const allVals=MODELS.flatMap(m=>{const e=S.md[m.id];return e?.ok?dslice(e.d,isT?'temperature_2m':'precipitation',0,48):[];});
+  const rp=rawP(allVals,B),cp=applyMKV(rp,MX);
+  const ti=cp.indexOf(Math.max(...cp));
+
+  rBuckets(B,rp,cp,ti,allVals.length);
+  rMx(MX,B);
+  rVarAccuracy();
+  renderSpikes(isT);
+  rCurrentWx();
+  rChart48(isT,f);
+
+  // Per-model daily maxima for prediction (accuracy-weighted)
+  const mxData=MODELS.map(m=>{
+    const e=S.md[m.id];if(!e?.ok)return null;
+    const v=dmx(e.d,isT?'temperature_2m':'precipitation',0,24);
+    const sc=S.modelScores[m.id]||0;
+    return v!=null?{id:m.id,name:m.name,v,sc}:null;
+  }).filter(Boolean);
+
+  if(!mxData.length) return;
+
+  const totalW=mxData.reduce((s,x)=>s+x.sc,0)||mxData.length;
+  const wtMean=mxData.reduce((s,x)=>s+(x.sc/totalW)*x.v,0);
+  const vals=mxData.map(x=>x.v);
+  const eMean=mean(vals),eStd=std(vals,eMean);
+  const corrEV=ev(B,cp);
+  const ci90=eStd*1.645;
+  const predC=corrEV,loC=corrEV-ci90,hiC=corrEV+ci90;
+  const pred=isT?(f?toF(predC).toFixed(1):predC.toFixed(1)):predC.toFixed(2);
+  const lo=isT?(f?toF(loC).toFixed(1):loC.toFixed(1)):loC.toFixed(2);
+  const hi=isT?(f?toF(hiC).toFixed(1):hiC.toFixed(1)):hiC.toFixed(2);
+  const agr=Math.round(vals.filter(v=>Math.abs(v-eMean)<=eStd).length/vals.length*100);
+  const shift=corrEV-ev(B,rp);
+  const compScore=computeComposite();
+  const conf=compScore!=null?(compScore>=75?'HIGH':compScore>=52?'MEDIUM':'LOW'):(eStd<2?'HIGH':eStd<4?'MEDIUM':'LOW');
+  const cc=conf==='HIGH'?'bh':conf==='MEDIUM'?'bm':'bl';
+  const cd=conf==='HIGH'?'#00e68a':conf==='MEDIUM'?'#f4be50':'#dc4646';
+  const bestId=getBestModelId();
+  const bestM=MODELS.find(m=>m.id===bestId);
+
+  document.getElementById('pred-val').textContent=pred;
+  document.getElementById('pred-unit').textContent=u;
+  document.getElementById('pred-ci').textContent=`90% CI: ${lo}${u} – ${hi}${u}  ·  Regime: ${S.regime.toUpperCase()}  ·  Weighted mean: ${isT?(f?toF(wtMean).toFixed(1):wtMean.toFixed(1)):wtMean.toFixed(1)}${u}  ·  ${mxData.length} models`;
+  document.getElementById('pred-badge').innerHTML=`<span class="badge ${cc}"><span style="width:5px;height:5px;border-radius:50%;background:${cd};display:inline-block"></span>${conf} CONFIDENCE</span>`;
+  document.getElementById('pred-mean').textContent=(isT?(f?toF(eMean).toFixed(1):eMean.toFixed(1)):eMean.toFixed(2))+u;
+  document.getElementById('pred-spread').textContent='±'+(isT?eStd.toFixed(1):eStd.toFixed(2))+u;
+  document.getElementById('pred-agree').textContent=agr+'%';
+  document.getElementById('sm').textContent=(shift>=0?'+':'')+shift.toFixed(1)+'°C';
+  document.getElementById('best-model-lbl').textContent=bestM?`▲ Highest accuracy: ${bestM.name} (${(S.modelScores[bestM.id]*100).toFixed(0)}% score)`:'';
+
+  if(compScore!=null){
+    const el=document.getElementById('acc-score');
+    el.textContent=Math.round(compScore)+'%';
+    el.style.color=cd;
+    document.getElementById('acc-grade').textContent=conf+' · '+S.regime.toUpperCase()+' REGIME';
+  }
+
+  S.last={city:CITIES[S.ci],isT,B,rp,cp,eMean,eStd,corrEV,pred,lo,hi,conf,agr,mxData,compScore,u,shift,bestId,regime:S.regime,wtMean};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CURRENT CONDITIONS
+// ═══════════════════════════════════════════════════════════════════════════
+function rCurrentWx(){
+  const okM=MODELS.filter(m=>S.md[m.id]?.ok);
+  if(!okM.length) return;
+  const bestId=getBestModelId()||okM[0].id;
+  const d=S.md[bestId]?.d;
+  if(!d?.current) return;
+  const cur=d.current,f=S.useFah;
+  const now=new Date();
+  document.getElementById('cw-time').textContent=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · '+MODELS.find(m=>m.id===bestId)?.name;
+  const code=cur.weather_code??0;
+  document.getElementById('cw-row').innerHTML=[
+    {l:'TEMPERATURE',v:(cur.temperature_2m!=null?fmtT(cur.temperature_2m,f)+unitT(f):'—')},
+    {l:'FEELS LIKE',v:(cur.apparent_temperature!=null?fmtT(cur.apparent_temperature,f)+unitT(f):'—')},
+    {l:'HUMIDITY',v:(cur.relative_humidity_2m??'—')+'%'},
+    {l:'DEW POINT',v:(cur.dew_point_2m!=null?fmtT(cur.dew_point_2m,f)+unitT(f):'—')},
+    {l:'WIND',v:(cur.wind_speed_10m!=null?cur.wind_speed_10m.toFixed(0):' —')+' km/h '+degToCard(cur.wind_direction_10m||0)},
+    {l:'PRESSURE',v:(cur.pressure_msl!=null?cur.pressure_msl.toFixed(1):' —')+' hPa'},
+    {l:'CLOUD',v:(cur.cloud_cover??'—')+'%'},
+    {l:'CONDITIONS',v:WX_CODES[code]||'Unknown'}
+  ].map(x=>`<div class="cw-item"><div class="cw-l">${x.l}</div><div class="cw-v">${x.v}</div></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// METAR RENDER
+// ═══════════════════════════════════════════════════════════════════════════
+function rMETAR(){
+  if(!S.metar?.length){document.getElementById('metar-raw').textContent='METAR unavailable for this station';return;}
+  const m=S.metar[0],f=S.useFah;
+  if(m.reportTime){const t=new Date(m.reportTime);document.getElementById('metar-time').textContent=t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' '+t.toLocaleDateString([],{month:'short',day:'numeric'});}
+  document.getElementById('metar-raw').textContent=m.rawOb||m.rawMetar||'—';
+  const temp=m.temp!=null?fmtT(m.temp,f)+unitT(f):'—';
+  const dp=m.dewp!=null?fmtT(m.dewp,f)+unitT(f):'—';
+  const wdir=m.wdir!=null?m.wdir+'° ('+degToCard(m.wdir)+')':'—';
+  const wspd=m.wspd!=null?m.wspd+' kt':'—';
+  const vis=m.visib!=null?m.visib+' SM':'—';
+  const alt=m.altim!=null?m.altim.toFixed(2)+' inHg':'—';
+  const sky=Array.isArray(m.clouds)?m.clouds.map(c=>(c.cover||'')+(c.base?'/'+c.base+'ft':'')).join(' '):(m.skyc1||m.sky||'—');
+  document.getElementById('metar-grid').innerHTML=[
+    {l:'TEMP/DEWPOINT',v:`${temp} / ${dp}`},{l:'WIND',v:`${wdir} @ ${wspd}`},
+    {l:'VISIBILITY',v:vis},{l:'ALTIMETER',v:alt},
+    {l:'SKY',v:sky},{l:'WX PHENOMENA',v:m.wxString||m.presentWeather||'None'},
+    {l:'STATION',v:m.icaoId||'—'},{l:'ELEVATION',v:m.elev!=null?m.elev+'m MSL':'—'}
+  ].map(x=>`<div class="mi"><div class="mi-l">${x.l}</div><div class="mi-v">${x.v}</div></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 48H SVG CHART
+// ═══════════════════════════════════════════════════════════════════════════
+function rChart48(isT,f){
+  const key=isT?'temperature_2m':'precipitation';
+  const okM=MODELS.filter(m=>S.md[m.id]?.ok);
+  if(!okM.length){document.getElementById('chart48').innerHTML=`<div class="empty">No model data yet…</div>`;return;}
+  const H48=48;
+  const perHour=Array.from({length:H48},(_,h)=>{
+    const vals=okM.map(m=>S.md[m.id].d?.hourly?.[key]?.[h]).filter(v=>v!=null&&!isNaN(v));
+    return vals.length?{mn:Math.min(...vals),mx:Math.max(...vals),mu:mean(vals)}:null;
+  });
+  const bestId=getBestModelId();
+  const bestSeries=bestId?Array.from({length:H48},(_,h)=>S.md[bestId]?.d?.hourly?.[key]?.[h]??null):null;
+  const conv=isT&&f?v=>(v!=null?toF(v):null):v=>v;
+  const pH=perHour.map(x=>x?{mn:conv(x.mn),mx:conv(x.mx),mu:conv(x.mu)}:null);
+  const bS=bestSeries?.map(conv);
+  const validPH=pH.filter(Boolean);
+  if(!validPH.length){document.getElementById('chart48').innerHTML=`<div class="empty">No hourly data</div>`;return;}
+  const allV=[...validPH.flatMap(x=>[x.mn,x.mx])];
+  const minV=Math.min(...allV),maxV=Math.max(...allV),rng=maxV-minV||1;
+  const W=800,H=110,pt=8,pb=14,pl=32,pr=8;
+  const bw=(W-pl-pr)/H48;
+  const xp=i=>pl+i*bw+bw/2;
+  const yp=v=>pt+(1-(v-minV)/rng)*(H-pt-pb);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">`;
+  // Grid
+  for(let i=0;i<=H48;i+=6) svg+=`<line x1="${pl+i*bw}" y1="${pt}" x2="${pl+i*bw}" y2="${H-pb}" stroke="#16243a" stroke-width=".5"/>`;
+  for(let i=0;i<=4;i++){const v=minV+i*rng/4,y=yp(v);
+    svg+=`<line x1="${pl}" y1="${y}" x2="${W-pr}" y2="${y}" stroke="#16243a" stroke-width=".4"/>`;
+    svg+=`<text x="${pl-2}" y="${y+3}" fill="#243650" font-size="7" text-anchor="end">${isT?(f?toF(v).toFixed(0):v.toFixed(0)):(v.toFixed(1))}</text>`;}
+  // Spread band
+  const bt=[],bb=[];
+  pH.forEach((x,i)=>{if(!x)return;bt.push(`${xp(i)},${yp(x.mx)}`);bb.unshift(`${xp(i)},${yp(x.mn)}`);});
+  if(bt.length>1) svg+=`<polygon points="${bt.join(' ')} ${bb.join(' ')}" fill="#38d4ff" opacity=".09"/>`;
+  // Mean line
+  let mp='';pH.forEach((x,i)=>{if(!x)return;mp+=(mp?'L ':'M ')+`${xp(i)} ${yp(x.mu)} `;});
+  if(mp) svg+=`<path d="${mp}" fill="none" stroke="#f4be50" stroke-width="1.4" stroke-opacity=".8" stroke-linejoin="round"/>`;
+  // Best model
+  if(bS){let bp='';bS.forEach((v,i)=>{if(v==null)return;bp+=(bp?'L ':'M ')+`${xp(i)} ${yp(v)} `;});
+    if(bp) svg+=`<path d="${bp}" fill="none" stroke="#38d4ff" stroke-width="1.8" stroke-linejoin="round"/>`;}
+  // NOW marker
+  svg+=`<line x1="${xp(0)}" y1="${pt}" x2="${xp(0)}" y2="${H-pb}" stroke="#38d4ff" stroke-width="1" stroke-dasharray="3,2" opacity=".6"/>`;
+  svg+=`<text x="${xp(0)+3}" y="${pt+7}" fill="#38d4ff" font-size="7">NOW</text>`;
+  // +24h marker
+  svg+=`<line x1="${xp(24)}" y1="${pt}" x2="${xp(24)}" y2="${H-pb}" stroke="#f4be50" stroke-width=".8" stroke-dasharray="2,3" opacity=".4"/>`;
+  svg+=`<text x="${xp(24)+3}" y="${pt+7}" fill="#f4be50" font-size="7">+24h</text>`;
+  svg+='</svg>';
+  document.getElementById('chart48').innerHTML=svg;
+  const now=new Date();
+  let labels='';
+  for(let i=0;i<=H48;i+=6){
+    const d=new Date(now.getTime()+i*3600000);
+    const l=i===0?'Now':(d.getHours()===0?d.toLocaleDateString([],{weekday:'short'}):d.getHours()+'h');
+    labels+=`<span class="c48-lbl">${l}</span>`;
+  }
+  document.getElementById('c48-labels').innerHTML=labels;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VARIABLE ACCURACY CARDS
+// ═══════════════════════════════════════════════════════════════════════════
+function rVarAccuracy(){
+  const f=S.useFah;
+  if(!Object.keys(S.md).length){document.getElementById('vargrid').innerHTML=`<div class="empty" style="grid-column:1/-1">Fetching…</div>`;return;}
+  document.getElementById('vargrid').innerHTML=VDEFS.map(v=>{
+    const st=getVarStats(v);
+    if(!st) return `<div class="vcard"><div class="vi"><div class="vn">${v.icon} ${v.lbl}</div><div class="vv" style="color:var(--tx3);font-size:12px">No data</div></div></div>`;
+    const pct=Math.round(st.score*100);
+    const c=pct>=75?'#00e68a':pct>=52?'#f4be50':'#dc4646';
+    let dv,du=v.unit;
+    if(v.key==='temperature_2m'||v.key==='dew_point_2m'){dv=fmtT(st.m,f);du=unitT(f);}
+    else if(v.key==='wind_direction_10m'){dv=Math.round(st.m)+'° '+degToCard(st.m);du='';}
+    else if(v.key==='soil_moisture_0_to_1cm'||v.key==='_airmass'){dv=st.m.toFixed(4);}
+    else if(v.key==='uv_index'){dv=st.m.toFixed(1);}
+    else if(v.key==='pressure_msl'){dv=st.m.toFixed(1);}
+    else dv=st.m.toFixed(1);
+    const fillH=Math.round(st.score*34);
+    return`<div class="vcard"><div class="vfill" style="height:${fillH}px;background:${c};opacity:.07"></div>
+      <div class="vi"><div class="vn">${v.icon} ${v.lbl} <span style="font-size:7px;color:var(--tx3)">${Math.round(v.w*100)}%</span></div>
+      <div class="vv" style="color:${v.col}">${dv}</div><div class="vu">${du} · n=${st.n}</div>
+      <div style="font-size:8px;color:var(--tx3);margin-top:3px">σ ${st.s.toFixed(v.key.includes('soil')||v.key==='_airmass'?4:1)}</div>
+      <div style="font-size:10px;font-weight:700;margin-top:2px;color:${c}">${pct}%</div>
+      <div class="vbar"><div class="vbf" style="width:${pct}%;background:${c}"></div></div>
+    </div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUCKETS
+// ═══════════════════════════════════════════════════════════════════════════
+function rBuckets(B,rp,cp,ti,n){
+  const el=document.getElementById('bchart');
+  if(!n){el.innerHTML=`<div class="empty">${Object.keys(S.md).length?'No data.':'Fetching…'}</div>`;return;}
+  el.innerHTML=B.map((b,i)=>{const rw=Math.round(rp[i]*100),cw=Math.round(cp[i]*100),top=i===ti;
+    return`<div class="brow"><div class="blbl${top?' top':''}">${b.l}</div><div class="brng">${b.r}</div><div class="btrack"><div class="braw" style="width:${rw}%;background:${b.f}"></div><div class="bcor" style="width:${cw}%;background:${b.f}"></div></div><div class="bpct${top?' top':''}">${cw}%</div><div class="braw-pct">${rw}%</div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MARKOV MATRIX
+// ═══════════════════════════════════════════════════════════════════════════
+function rMx(MX,B){
+  const n=B.length;let h=`<table class="mxtbl"><tr><td class="mxhd" style="width:26px">F↓A→</td>`;
+  B.forEach(b=>h+=`<td class="mxhd">${b.l.slice(0,4)}</td>`);h+=`</tr>`;
+  for(let i=0;i<n;i++){h+=`<tr><td style="font-size:7px;color:var(--tx3);text-align:right;padding-right:2px">${B[i].l.slice(0,4)}</td>`;
+    for(let j=0;j<n;j++){const v=MX[i][j],d=i===j;h+=`<td style="background:rgba(29,158,117,${d?Math.min(v+.1,1):v*.85});color:${v>.3?'#c8f0e0':'var(--tx3)'};font-weight:${d?700:400}">${Math.round(v*100)}</td>`;}
+    h+=`</tr>`;}
+  document.getElementById('mwrap').innerHTML=h+`</table>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODEL GRID
+// ═══════════════════════════════════════════════════════════════════════════
+function rGrid(){
+  document.getElementById('mgrid').innerHTML=MODELS.map(m=>{
+    const e=S.md[m.id],s=!e?'p':(e.ok?'ok':'err');
+    const dc=s==='ok'?'#00e68a':s==='err'?'#dc4646':'#f4be50';
+    const sc=s==='ok'&&S.modelScores[m.id]!=null?Math.round(S.modelScores[m.id]*100)+'%':'—';
+    const prof=m.profile==='aifs'?`<span class="mtag" style="background:#0f2010;color:#60a030">AIFS</span>`:'';
+    const err=s==='err'&&e?.err?`<span class="mtag" style="background:#2a0808;color:#a04040" title="${e.err}">ERR</span>`:'';
+    return`<div class="mchip"><div class="mdot${s==='p'?' pulse':''}" style="background:${dc}"></div>
+      <div style="overflow:hidden;min-width:0;flex:1"><div class="mname">${m.name}${prof}${err}</div><div class="morg">${m.org} · ${m.id}</div></div>
+      <div class="msco" style="color:${dc}">${sc}</div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AI ANALYSIS
+// ═══════════════════════════════════════════════════════════════════════════
+async function runAI(){
+  if(!S.last){alert('Wait for model data to load first.');return;}
+  const btn=document.getElementById('ai-btn'),box=document.getElementById('ai-box');
+  btn.disabled=true;btn.textContent='Analysing…';
+  box.innerHTML=`<div class="ai-text" style="color:var(--tx3)">Synthesising 14-model, 11-variable ensemble with regime context and METAR…</div>`;
+  const p=S.last,c=p.city,f=S.useFah;
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+  const varLines=VDEFS.map(v=>{const st=getVarStats(v);if(!st)return`  ${v.lbl}: no data`;
+    let val;if(v.key==='temperature_2m'||v.key==='dew_point_2m')val=fmtT(st.m,f)+unitT(f);
+    else if(v.key==='wind_direction_10m')val=`${Math.round(st.m)}° (${degToCard(st.m)})`;
+    else val=st.m.toFixed(v.key.includes('soil')||v.key==='_airmass'?4:1);
+    return`  ${v.lbl}: ${val}${v.unit} | σ=${st.s.toFixed(2)} | agreement=${Math.round(st.score*100)}% | weight=${Math.round(v.w*100)}%`;
+  }).join('\n');
+  const bktTbl=p.B.map((b,i)=>`  ${b.l}: raw ${Math.round(p.rp[i]*100)}% → regime-corrected ${Math.round(p.cp[i]*100)}%`).join('\n');
+  const metarStr=S.metar?.[0]?.rawOb||'Not available';
+  const bestM=MODELS.find(m=>m.id===p.bestId);
+  const spikes=detectSpikes(p.isT);
+  const spikeStr=spikes.length?spikes.map(sp=>`${sp.name} ${sp.dir} by ${Math.abs(sp.dev).toFixed(1)}σ`).join(', '):'None detected';
+  const topM=MODELS.filter(m=>S.md[m.id]?.ok).sort((a,b)=>(S.modelScores[b.id]||0)-(S.modelScores[a.id]||0)).slice(0,3).map(m=>`${m.name}(${Math.round((S.modelScores[m.id]||0)*100)}%)`).join(', ');
+
+  const prompt=`You are a senior meteorologist and Polymarket weather market specialist.
+
+DATE/TIME: ${dateStr} at ${timeStr}
+STATION: ${c.n} (${c.c}) · ${c.icao} / ${c.sta}
+VARIABLE: ${p.isT?'Temperature (daily max)':'Precipitation'}
+UNITS: ${f?'Fahrenheit':'Celsius'}
+
+DETECTED REGIME: ${p.regime.toUpperCase()} — This activates the ${p.regime.toUpperCase()} Markov bias correction matrix.
+
+METAR: ${metarStr}
+
+ENSEMBLE PREDICTION:
+· Accuracy-weighted prediction: ${p.pred}${p.u}
+· 90% CI: ${p.lo}${p.u} – ${p.hi}${p.u}
+· Raw ensemble mean: ${(f&&p.isT?toF(p.eMean):p.eMean).toFixed(1)}${p.u} | σ=±${p.eStd.toFixed(1)}${p.u}
+· Regime-corrected EV: ${(f&&p.isT?toF(p.corrEV):p.corrEV).toFixed(1)}${p.u} | Markov shift: ${p.shift.toFixed(1)}°C
+· Model agreement (within 1σ): ${p.agr}% | Composite accuracy: ${p.compScore!=null?Math.round(p.compScore)+'%':'N/A'}
+· Confidence: ${p.conf}
+· Best model: ${bestM?.name||'N/A'} | Top models: ${topM}
+
+SPIKE DETECTION: ${spikeStr}
+
+11-VARIABLE BREAKDOWN:
+${varLines}
+
+BUCKET PROBABILITIES (raw → regime-corrected):
+${bktTbl}
+
+Write exactly 4 sentences:
+1. State the predicted max, regime context, confidence, and 90% CI. Reference the METAR as ground truth.
+2. Explain what the ${p.regime} regime matrix correction is doing to the probabilities and which variable drove regime classification.
+3. Name any spiking models, the 2 variables with worst agreement, and what they imply for forecast bust risk.
+4. Specific Polymarket edge: exact bucket boundary most at risk, whether to fade or follow the ensemble, and any asymmetric risk from the regime correction. Be precise with numbers.`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    const txt=(d.content||[]).map(x=>x.text||'').join('').trim()||'No response.';
+    box.innerHTML=`<div class="ai-text">${txt.replace(/\n\n/g,'</p><p style="margin-top:9px">').replace(/\n/g,'<br>')}</div>`
+      +`<div class="ai-meta">${dateStr} · ${timeStr} · claude-sonnet-4 · ${p.mxData.length} models · ${p.regime} regime · ${c.icao}</div>`;
+  }catch(ex){box.innerHTML=`<div class="ai-text" style="color:var(--red)">Analysis failed: ${ex.message}</div>`;}
+  btn.disabled=false;btn.textContent='Regenerate ↗';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleCF(){
+  S.useFah=!S.useFah;
+  document.getElementById('cfbtn').textContent=S.useFah?'°F → °C':'°C → °F';
+  if(Object.keys(S.md).length){rAll();if(S.metar)rMETAR();}
+}
+function setV(v){
+  S.v=v;
+  document.getElementById('bt').style.color=v==='temp'?'var(--acc)':'var(--tx3)';
+  document.getElementById('bt').style.borderColor=v==='temp'?'var(--bd2)':'var(--bd)';
+  document.getElementById('bp').style.color=v==='precip'?'var(--acc)':'var(--tx3)';
+  document.getElementById('bp').style.borderColor=v==='precip'?'var(--bd2)':'var(--bd)';
+  rAll();
+}
+function selectCity(i){
+  S.ci=i;
+  document.querySelectorAll('.ci').forEach((el,j)=>el.className='ci'+(j===i?' on':''));
+  const c=CITIES[i];
+  document.getElementById('city-title').textContent=`${c.n}, ${c.c}`;
+  document.getElementById('city-coords').textContent=`${c.icao} · ${c.sta} · ${Math.abs(c.lat).toFixed(4)}°${c.lat>=0?'N':'S'} ${Math.abs(c.lon).toFixed(4)}°${c.lon>=0?'E':'W'}`;
+  document.getElementById('metar-icao').textContent=c.icao;
+  go();
+}
+function filterCities(q){
+  document.querySelectorAll('.ci').forEach(el=>{
+    el.style.display=(el.dataset.n+el.dataset.c).toLowerCase().includes(q.toLowerCase())?'block':'none';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════
+function init(){
+  const cl=document.getElementById('clist');
+  CITIES.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='ci'+(i===0?' on':'');d.dataset.n=c.n;d.dataset.c=c.c;
+    d.innerHTML=`<div class="cn">${c.n}</div><div class="cc">${c.c} · <span style="color:var(--acc);opacity:.45">${c.icao}</span></div>`;
+    d.onclick=()=>selectCity(i);cl.appendChild(d);
+  });
+  const c0=CITIES[0];
+  document.getElementById('city-title').textContent=`${c0.n}, ${c0.c}`;
+  document.getElementById('city-coords').textContent=`${c0.icao} · ${c0.sta} · ${Math.abs(c0.lat).toFixed(4)}°N ${Math.abs(c0.lon).toFixed(4)}°W`;
+  document.getElementById('metar-icao').textContent=c0.icao;
+  rGrid();go();
+}
+init();
+</script>
+</body>
+</html>
